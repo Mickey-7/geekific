@@ -1,0 +1,312 @@
+SOLID
+
+Single Responsibility Principle
+    - class should have one, and only one, responsibility and reason to change
+
+example
+    @Data
+    public class Video{
+        private String title;
+        private int time;
+        private int likes;
+        private int views;
+
+        public double getNumOfHrsPlayed(){
+            return (time/3600.0) * views;
+        }
+
+        public void persist() {
+            String url = "jdbc:mysql://localhost:3306/youtube";
+            Connection conn = DriverManager.getConnection(url,"root","");
+            Statement stmt = conn.createStatement();
+            String sql = "INSERT INTO Video(Title, Time, Likes, Views) VALUES ("
+                            + title + "," + time + "," + likes + "," + views + ")";
+            stmt.executeUpdate(sql);
+        }
+    }
+
+    --------------------------------------------------------------------------------------
+
+    applying Single Responsibility Principle
+
+    @Data
+    public class Video{
+        private String title;
+        private int time;
+        private int likes;
+        private int views;
+
+        public double getNumOfHrsPlayed(){
+            return (time/3600.0) * views;
+        }
+    }
+
+    public class ConnectionDAO{
+        private Connection connection;
+        // user, password, dbms, dbName, server, port
+
+        public ConnectionDAO(...){}
+
+        public Connection craeteConnection(){
+            // creates the connection and returns it
+            // based on the given properties
+        }
+    }
+
+    public class VideoDAO{
+        public void persist() {
+            // we just have to call the class now and pass to it the properties
+            Connection conn = new ConnectionDAO(...).craeteConnection();
+            Statement stmt = conn.createStatement();
+            String sql = "INSERT INTO Video(Title, Time, Likes, Views) VALUES ("
+                            + title + "," + time + "," + likes + "," + views + ")";
+            stmt.executeUpdate(sql);
+        }
+    }
+
+
+Open Closed Principle
+    - a class should be open for extension, but closed for modification
+
+example:
+    @Data
+    public class Video{
+        private String title;
+        private int time;
+        private int likes;
+        private int views;
+        private Category category;
+
+        public double getNumOfHrsPlayed(){
+            return (time/3600.0) * views;
+        }
+
+        enum Category{
+            GAMING, EDUCATIONAL, ENTERTAINMENT
+        }
+    }
+
+    public class EarningsCalculator{
+        public double calculateEarnings(Video video){
+            return switch(video.getCategory()){
+                case GAMING -> calculateGamingEarnings(video);
+                case EDUCATIONAL -> calculateEducationalEarnings(video);
+                case ENTERTAINMENT -> calculateEntertainmentEarnings(video);
+            }
+        }
+
+        public double calculateGamingEarnings(Video video){
+            return video.getLikes()*0.013+video.getViews()*0.0013;
+        }
+
+          public double calculateEducationalEarnings(Video video){
+            return video.getLikes()*0.012+video.getViews()*0.0012;
+        }
+
+          public double calculateEntertainmentEarnings(Video video){
+            return video.getLikes()*0.011+video.getViews()*0.0011;
+        }
+    }
+
+    what is were to add another category, so we need to modify EarningsCalculator class
+
+    --------------------------------------------------------------------------------------
+
+    applying Open Closed Principle
+
+    public interface IEarningsCalculator{
+        double calculateEarnings(Video video);
+    }
+
+    public class GamingEarningsCalculator implements IEarningsCalculator{
+        @Override
+        public double calculateEarnings(Video video){
+            return video.getLikes()*0.013+video.getViews()*0.0013;
+        }
+    }
+
+    public class EducationalEarningsCalculator implements IEarningsCalculator{
+        @Override
+        public double calculateEarnings(Video video){
+            return video.getLikes()*0.012+video.getViews()*0.0012;
+        }
+    }
+
+    public class EntertainmentarningsCalculator implements IEarningsCalculator{
+        @Override
+        public double calculateEarnings(Video video){
+            return video.getLikes()*0.011+video.getViews()*0.0011;
+        }
+    }
+
+    the classes are now open for extension and closed for modification
+
+Liskov Substitution Principle
+    - subtypes should be replaceable by their base types
+
+example:
+    @Data
+    public class Video{
+        private String title;
+        private int time;
+        private int likes;
+        private int views;
+
+        public double getNumOfHrsPlayed(){
+            return (time/3600.0) * views;
+        }
+
+        public void playRandomAd(){
+            // play an add
+        }
+    }
+
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    public class PremiumVideo extends Video{
+        private int premiumId;
+
+        @Override
+        public void playRandomAd(){
+            throw new Exception("
+                No Ads play during Premium videos!
+            ")
+        }
+    }
+
+    public static void main(String[] args){
+        List<Video> videos = new ArrayList<>();
+        videos.add(new Video());
+        videos.add(new PremiumVideo());
+        for(Video video : videos){
+            video.playRandomAd();
+        }
+    }
+
+    above code will throw the exception we defined in the playRandomAd method causing our app to crush
+
+    --------------------------------------------------------------------------------------
+
+    applying Liskov Substitution Principle
+
+    public class VideoManager{
+        private String title;
+        private int time;
+        private int likes;
+        private int views;
+
+        public double getNumOfHrsPlayed(){
+            return (time/3600.0) * views;
+        }
+
+        public void playRandomAd(){
+            // play an add
+        }
+    }
+
+    public class Video{
+        private VideoManager manager;
+
+        public double getNumOfHrsPlayed(){
+            return manager.getNumOfHrsPlayed();
+        }
+
+        public void playRandomAd(){
+            manager.playRandomAd();
+        }
+    }
+
+    public class PremiumVideo{
+        private VideoManager manager;
+        private int premiumId;
+
+        public double getNumOfHrsPlayed(){
+            return manager.getNumOfHrsPlayed();
+        }
+    }
+
+Interface Segregation Principle
+    - many specific interfaces are better then a general interface
+
+ example:
+    same scenario from above
+
+    public class Video implements IVideoActions{
+        ...
+        @Override
+        public double getNumOfHrsPlayed(){
+            ...
+        }
+        @Override
+        public void playRandomAd(){
+            ...
+        }
+    }
+
+    public class PremiumVideo implements IVideoActions{
+        ...
+        @Override
+        public double getNumOfHrsPlayed(){
+            ...
+        }
+        @Override
+        public void playRandomAd(){
+            ...
+        }
+    }
+
+    public interface IVideoActions{
+        double getNumOfHrsPlayed();
+        void playRandomAd();
+    }
+
+    violating same problem from above 
+
+    --------------------------------------------------------------------------------------
+
+    applying Interface Segregation Principle
+
+    public interface IVideoActions{
+        double getNumOfHrsPlayed();
+    }
+
+    public interface IAdsActions(){
+        void playRandomAd();
+    }
+
+    public class Video implements IVideoActions, IAdsActions{
+        ...
+        @Override
+        public double getNumOfHrsPlayed(){
+            ...
+        }
+        @Override
+        public void playRandomAd(){
+            ...
+        }
+    }
+
+    public class PremiumVideo implements IVideoActions{
+        ...
+        @Override
+        public double getNumOfHrsPlayed(){
+            ...
+        }
+    }
+
+Dependency Inversion Principle
+    - we must depend on abstractions and not concrete classes
+
+example:
+    public class Service{
+        IEarningsCalculator calculator;
+
+        public Service(IEarningsCalculator calculator){
+            this.calculator = calculator
+        }
+
+        public double calculateEarnings(Video video){
+            return calculator.calculateEarnings(video);
+        }
+    }
+

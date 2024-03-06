@@ -1,0 +1,123 @@
+Dependency Injection
+    - in any object-oriented language, classes and objects are
+    the foundations of any functionality you can think of
+    - the relationships between these classes and objects, make it
+    possible to extend and reuse some of these functionalities
+    - the way that we choose to build those dependencies, 
+    determine how decoupled and reusable our code will be
+
+example:
+    public interface Food {}
+    public class Burger implements Food {}
+    public class Pizza implements Food {}
+
+    public class BurgerChef{
+        private Food burger;
+
+        public BurgerChef(){
+            burger = new Burger();
+        }
+    }
+
+    public class PizzaChef{
+        private Food pizza;
+
+        public PizzaChef(){
+            pizza = new Pizza();
+        }
+    }
+
+
+    --------------------------------------------------------------------------------------
+
+    applying Dependency Injection
+
+    public class Chef{
+        private Food food;
+
+        public Chef(Food food){
+            this.food = food
+        }
+
+        public void prepareFood(){
+            // do something with
+            // the food object 
+        }
+    }
+    
+    Chef burgerChef = new Chef(new Burger())
+    Chef pizzaChef = new Chef(new Pizza())
+
+
+Dependency Injection Types:
+
+    Constructor Injection
+        example:
+            public class ClassA{
+                private ClassB classB;
+                
+                public ClassA(ClassB classB){
+                    this.classB = classB;
+                }
+            }
+
+            ClassA classA = new ClassA(new ClassB());
+
+    Setter Injection
+        example:
+            public class ClassA{
+                private ClassB classB;
+                
+                public ClassA(){}
+
+                public void setClassB(ClassB classB){
+                    this.classB = classB;
+                }
+            }
+
+        ClassA classA = new ClassA();
+        classA.setClassB(new ClassB());
+
+    Field Injection
+        example:
+            public class ClassA{
+                public ClassB classB;
+                
+                public ClassA(){}
+            }
+
+            ClassA classA = new ClassA();
+            classA.classB = new ClassB();
+
+
+    --------------------------------------------------------------------------------------
+
+Why do we want to apply Dependency Injection?
+    - need to know the concept of Inversion of Control 
+
+    Inversion of Control
+        - principle in software engineering which transfers the control
+        of objects or portions of programs to a framework
+        - enables framework to take control over the flow of a program
+        and make calls to our custom code
+        - use abstractions, hence, to add an extra behavior, 
+        we extend the classes od the framework
+        - 5th principle of SOLID
+
+        Depends on the implementation :
+
+        public class Chef{
+            private Food burger;
+            public Chef(){
+                burger = new Burger();
+            }
+        }
+
+        Depends on the abstraction :
+
+        public class Chef{
+            private Food food;
+            public Chef(Food food){
+                this.food = food;
+            }
+        }
